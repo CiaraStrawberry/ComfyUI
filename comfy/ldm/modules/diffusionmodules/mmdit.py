@@ -1,6 +1,8 @@
 from functools import partial
 from typing import Dict, Optional, List
 
+import traceback
+
 import numpy as np
 import torch
 import torch.nn as nn
@@ -795,6 +797,7 @@ class MMDiT(nn.Module):
         self.pos_embed_offset = pos_embed_offset
         self.pos_embed_max_size = pos_embed_max_size
         self.x_block_self_attn_layers = x_block_self_attn_layers
+        print(f"{context_size=}")
 
         # hidden_size = default(hidden_size, 64 * depth)
         # num_heads = default(num_heads, hidden_size // 64)
@@ -994,6 +997,20 @@ class MMDiT(nn.Module):
         t: (N,) tensor of diffusion timesteps
         y: (N,) tensor of class labels
         """
+        print("MMDiT FWD")
+        print(f"{x.shape=}")
+        print(f"{y.shape=}")
+        print(f"{context.shape=}")
+        print(f"{len(control['input'])=}")
+        print(f"{len(control['middle'])=}")
+        print(f"{len(control['output'])=}")
+        print(f"{type(control['output'][0])=}")
+
+        x = torch.ones_like(x)
+        y = torch.ones_like(y)
+        context = torch.ones_like(context)
+
+        # traceback.print_stack()
 
         if self.context_processor is not None:
             context = self.context_processor(context)
@@ -1011,6 +1028,7 @@ class MMDiT(nn.Module):
         x = self.forward_core_with_concat(x, c, context, control, transformer_options)
 
         x = self.unpatchify(x, hw=hw)  # (N, out_channels, H, W)
+        print(f"{x.shape=} | {x.min()=} | {x.max()=} | {x.mean()=}")
         return x[:,:,:hw[-2],:hw[-1]]
 
 

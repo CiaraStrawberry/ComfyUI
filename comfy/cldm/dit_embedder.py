@@ -93,6 +93,18 @@ class ControlNetEmbedder(nn.Module):
         context: Optional[torch.Tensor] = None,
         hint = None,
     ) -> Tuple[Tensor, List[Tensor]]:
+        print("ControlNetEmbedder FWD")
+        print(f"{x.shape=}")
+        print(f"{y.shape=}")
+        print(f"{context.shape=}")
+        print(f"{hint.shape=}")
+        print(f"{timesteps=}")
+
+        x = torch.ones_like(x)
+        y = torch.ones_like(y)
+        context = torch.ones_like(context)
+        hint = torch.ones_like(hint)
+
         x_shape = list(x.shape)
         x = self.x_embedder(x)
         if not self.double_y_emb:
@@ -117,4 +129,7 @@ class ControlNetEmbedder(nn.Module):
                 x = out
             block_out += (self.controlnet_blocks[i](out),) * repeat
 
+        print(f"{len(block_out)=}")
+        for o in block_out:
+            print(f"{o.shape=} | {o.min()=} | {o.max()=} | {o.mean()=}")
         return {"output": block_out}
