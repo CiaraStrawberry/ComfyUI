@@ -99,7 +99,6 @@ class ControlNetEmbedder(nn.Module):
             h = (x_shape[-2] + 1) // self.patch_size
             w = (x_shape[-1] + 1) // self.patch_size
             x += get_2d_sincos_pos_embed_torch(self.hidden_size, w, h, device=x.device)
-
         c = self.t_embedder(timesteps, dtype=x.dtype)
         if y is not None and self.y_embedder is not None:
             if self.double_y_emb:

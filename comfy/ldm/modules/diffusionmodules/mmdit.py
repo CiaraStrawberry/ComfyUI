@@ -994,11 +994,11 @@ class MMDiT(nn.Module):
 
         hw = x.shape[-2:]
         x = self.x_embedder(x) + comfy.ops.cast_to_input(self.cropped_pos_embed(hw, device=x.device), x)
-
         c = self.t_embedder(t, dtype=x.dtype)  # (N, D)
         if y is not None and self.y_embedder is not None:
             y = self.y_embedder(y)  # (N, D)
             c = c + y  # (N, D)
+
         if context is not None:
             context = self.context_embedder(context)
 
