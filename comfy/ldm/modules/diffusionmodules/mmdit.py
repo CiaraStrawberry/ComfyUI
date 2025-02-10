@@ -989,6 +989,7 @@ class MMDiT(nn.Module):
         t: (N,) tensor of diffusion timesteps
         y: (N,) tensor of class labels
         """
+
         if self.context_processor is not None:
             context = self.context_processor(context)
 
