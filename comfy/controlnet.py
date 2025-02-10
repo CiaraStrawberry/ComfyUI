@@ -526,7 +526,6 @@ def load_controlnet_sd35(sd, model_options={}):
                                                                dtype=unet_dtype,
                                                                operations=operations)
 
-
     control_model = controlnet_load_state_dict(control_model, sd)
 
     latent_format = comfy.latent_formats.SD3()
@@ -589,8 +588,6 @@ def convert_mistoline(sd):
 
 
 def load_controlnet_state_dict(state_dict, model=None, model_options={}):
-    return load_controlnet_sd35(state_dict, model_options=model_options) #Stability sd3.5 format
-
     controlnet_data = state_dict
     if 'after_proj_list.18.bias' in controlnet_data.keys(): #Hunyuan DiT
         return load_controlnet_hunyuandit(controlnet_data, model_options=model_options)

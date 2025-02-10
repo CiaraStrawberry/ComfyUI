@@ -964,7 +964,6 @@ class MMDiT(nn.Module):
                     c=c_mod,
                     use_checkpoint=self.use_checkpoint,
                 )
-
             if control is not None:
                 control_o = control.get("output")
                 if i < len(control_o):
@@ -1000,7 +999,6 @@ class MMDiT(nn.Module):
         if y is not None and self.y_embedder is not None:
             y = self.y_embedder(y)  # (N, D)
             c = c + y  # (N, D)
-
         if context is not None:
             context = self.context_embedder(context)
 

@@ -862,10 +862,6 @@ class ControlNetApplyAdvanced:
 
         control_hint = image.movedim(-1,1)
         cnets = {}
-        # print("--------------------------------")
-        # print(f"{type(control_net)=}")
-        # print(f"{control_net.x_embedder.proj.weight.shape=} | {control_net.x_embedder.proj.weight.min()=} | {control_net.x_embedder.proj.weight.max()=} | {control_net.x_embedder.proj.weight.mean()=}")
-        # print("--------------------------------")
 
         out = []
         for conditioning in [positive, negative]:
