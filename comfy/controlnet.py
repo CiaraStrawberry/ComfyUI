@@ -104,6 +104,9 @@ class ControlBase:
             self.previous_controlnet.pre_run(model, percent_to_timestep_function)
 
     def set_previous_controlnet(self, controlnet):
+        # print("set_previous_controlnet")
+        # print(f"{type(controlnet)=}")
+        # print(f"{controlnet.x_embedder.proj.weight.shape=} | {controlnet.x_embedder.proj.weight.min()=} | {controlnet.x_embedder.proj.weight.max()=} | {controlnet.x_embedder.proj.weight.mean()=}")
         self.previous_controlnet = controlnet
         return self
 
@@ -435,6 +438,8 @@ def controlnet_config(sd, model_options={}):
 
 def controlnet_load_state_dict(control_model, sd):
     missing, unexpected = control_model.load_state_dict(sd, strict=False)
+    print(f"{missing=}")
+    print(f"{unexpected=}")
 
     if len(missing) > 0:
         logging.warning("missing controlnet keys: {}".format(missing))
@@ -467,10 +472,10 @@ def load_controlnet_mmdit(sd, model_options={}):
 
 class ControlNetSD35(ControlNet):
     def pre_run(self, model, percent_to_timestep_function):
-        if self.control_model.double_y_emb:
-            missing, unexpected = self.control_model.orig_y_embedder.load_state_dict(model.diffusion_model.y_embedder.state_dict(), strict=False)
-        else:
-            missing, unexpected = self.control_model.x_embedder.load_state_dict(model.diffusion_model.x_embedder.state_dict(), strict=False)
+        # if self.control_model.double_y_emb:
+        #     missing, unexpected = self.control_model.orig_y_embedder.load_state_dict(model.diffusion_model.y_embedder.state_dict(), strict=False)
+        # else:
+        #     missing, unexpected = self.control_model.x_embedder.load_state_dict(model.diffusion_model.x_embedder.state_dict(), strict=False)
         super().pre_run(model, percent_to_timestep_function)
 
     def copy(self):
@@ -527,7 +532,14 @@ def load_controlnet_sd35(sd, model_options={}):
                                                                dtype=unet_dtype,
                                                                operations=operations)
 
+    # print(">>> load_controlnet_sd35 <<<")
+    # print(f"{control_model=}")
+    # for (k, v) in sd.items():
+    #     print(f"{k=} | {v.dtype} | {v.shape=} | {v.min()=} | {v.max()=} | {v.mean()=}")
+
+    # print(f"{control_model.x_embedder.proj.weight.shape=} | {control_model.x_embedder.proj.weight.min()=} | {control_model.x_embedder.proj.weight.max()=} | {control_model.x_embedder.proj.weight.mean()=}")
     control_model = controlnet_load_state_dict(control_model, sd)
+    # print(f"{control_model.x_embedder.proj.weight.shape=} | {control_model.x_embedder.proj.weight.min()=} | {control_model.x_embedder.proj.weight.max()=} | {control_model.x_embedder.proj.weight.mean()=}")
 
     latent_format = comfy.latent_formats.SD3()
     preprocess_image = lambda a: a
@@ -589,6 +601,8 @@ def convert_mistoline(sd):
 
 
 def load_controlnet_state_dict(state_dict, model=None, model_options={}):
+    return load_controlnet_sd35(state_dict, model_options=model_options) #Stability sd3.5 format
+
     controlnet_data = state_dict
     if 'after_proj_list.18.bias' in controlnet_data.keys(): #Hunyuan DiT
         return load_controlnet_hunyuandit(controlnet_data, model_options=model_options)
