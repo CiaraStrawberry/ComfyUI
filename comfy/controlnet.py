@@ -43,7 +43,6 @@ if TYPE_CHECKING:
 
 def broadcast_image_to(tensor, target_batch_size, batched_number):
     current_batch_size = tensor.shape[0]
-    #print(current_batch_size, target_batch_size)
     if current_batch_size == 1:
         return tensor
 
@@ -104,9 +103,6 @@ class ControlBase:
             self.previous_controlnet.pre_run(model, percent_to_timestep_function)
 
     def set_previous_controlnet(self, controlnet):
-        # print("set_previous_controlnet")
-        # print(f"{type(controlnet)=}")
-        # print(f"{controlnet.x_embedder.proj.weight.shape=} | {controlnet.x_embedder.proj.weight.min()=} | {controlnet.x_embedder.proj.weight.max()=} | {controlnet.x_embedder.proj.weight.mean()=}")
         self.previous_controlnet = controlnet
         return self
 
@@ -438,8 +434,6 @@ def controlnet_config(sd, model_options={}):
 
 def controlnet_load_state_dict(control_model, sd):
     missing, unexpected = control_model.load_state_dict(sd, strict=False)
-    print(f"{missing=}")
-    print(f"{unexpected=}")
 
     if len(missing) > 0:
         logging.warning("missing controlnet keys: {}".format(missing))
@@ -532,14 +526,8 @@ def load_controlnet_sd35(sd, model_options={}):
                                                                dtype=unet_dtype,
                                                                operations=operations)
 
-    # print(">>> load_controlnet_sd35 <<<")
-    # print(f"{control_model=}")
-    # for (k, v) in sd.items():
-    #     print(f"{k=} | {v.dtype} | {v.shape=} | {v.min()=} | {v.max()=} | {v.mean()=}")
 
-    # print(f"{control_model.x_embedder.proj.weight.shape=} | {control_model.x_embedder.proj.weight.min()=} | {control_model.x_embedder.proj.weight.max()=} | {control_model.x_embedder.proj.weight.mean()=}")
     control_model = controlnet_load_state_dict(control_model, sd)
-    # print(f"{control_model.x_embedder.proj.weight.shape=} | {control_model.x_embedder.proj.weight.min()=} | {control_model.x_embedder.proj.weight.max()=} | {control_model.x_embedder.proj.weight.mean()=}")
 
     latent_format = comfy.latent_formats.SD3()
     preprocess_image = lambda a: a

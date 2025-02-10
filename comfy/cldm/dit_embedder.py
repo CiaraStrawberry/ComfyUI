@@ -27,7 +27,6 @@ class ControlNetEmbedder(nn.Module):
         operations = None,
     ):
         super().__init__()
-        print("[!] ControlNetEmbedder CTOR [!]")
         self.main_model_double = main_model_double
         self.dtype = dtype
         self.hidden_size = num_attention_heads * attention_head_dim
@@ -94,20 +93,12 @@ class ControlNetEmbedder(nn.Module):
         context: Optional[torch.Tensor] = None,
         hint = None,
     ) -> Tuple[Tensor, List[Tensor]]:
-        # print("ControlNetEmbedder FWD")
-
-        # x = torch.ones_like(x)
-        # y = torch.ones_like(y)
-        # context = torch.ones_like(context)
-        # hint = torch.ones_like(hint)
-
         x_shape = list(x.shape)
         x = self.x_embedder(x)
         if not self.double_y_emb:
             h = (x_shape[-2] + 1) // self.patch_size
             w = (x_shape[-1] + 1) // self.patch_size
-            p_embed = get_2d_sincos_pos_embed_torch(self.hidden_size, w, h, device=x.device)
-            x += p_embed
+            x += get_2d_sincos_pos_embed_torch(self.hidden_size, w, h, device=x.device)
 
         c = self.t_embedder(timesteps, dtype=x.dtype)
         if y is not None and self.y_embedder is not None:
@@ -116,13 +107,11 @@ class ControlNetEmbedder(nn.Module):
             y = self.y_embedder(y)
             c = c + y
 
-        # TODO this part is missing in upstream Comfy.
-        # SGM uses PositionalPatchEmbed, not just PatchEmbed
-        x = x + self.pos_embed_input(hint)
         h = (x_shape[-2] + 1) // self.patch_size
         w = (x_shape[-1] + 1) // self.patch_size
-        p_embed = get_2d_sincos_pos_embed_torch(self.hidden_size, w, h, device=x.device)
-        x += p_embed
+        hint_emb = self.pos_embed_input(hint)
+        hint_emb += get_2d_sincos_pos_embed_torch(self.hidden_size, w, h, device=x.device)
+        x = x + hint_emb
 
         block_out = ()
 
@@ -133,7 +122,4 @@ class ControlNetEmbedder(nn.Module):
                 x = out
             block_out += (self.controlnet_blocks[i](out),) * repeat
 
-        # print(f"{len(block_out)=}")
-        # for o in block_out:
-        #     print(f"{o.shape=} | {o.min()=} | {o.max()=} | {o.mean()=}")
         return {"output": block_out}

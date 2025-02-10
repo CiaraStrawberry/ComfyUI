@@ -98,22 +98,12 @@ class PatchEmbed(nn.Module):
         self.norm = norm_layer(embed_dim) if norm_layer else nn.Identity()
 
     def forward(self, x):
-        # print("PatchEmbed FWD")
-        # print(f"{x.shape=} | {x.min()=} | {x.max()=} | {x.mean()=}")
-        # print(f"0 {self.dynamic_img_pad=} | {self.padding_mode=} | {self.patch_size=}")
         if self.dynamic_img_pad:
             x = comfy.ldm.common_dit.pad_to_patch_size(x, self.patch_size, padding_mode=self.padding_mode)
-            # print(f"1 {x.shape=} | {x.min()=} | {x.max()=} | {x.mean()=}")
-        # print(f"{self.proj=}")
         x = self.proj(x)
-        # print(f"{self.proj.weight.shape=} | {self.proj.weight.min()=} | {self.proj.weight.max()=} | {self.proj.weight.mean()=}")
-        # print(f"2 {x.shape=} | {x.min()=} | {x.max()=} | {x.mean()=}")
-        # print(f"3 {self.flatten=}")
         if self.flatten:
             x = x.flatten(2).transpose(1, 2)  # NCHW -> NLC
-        # print(f"4 {x.shape=} | {x.min()=} | {x.max()=} | {x.mean()=}")
         x = self.norm(x)
-        # print(f"5 {x.shape=} | {x.min()=} | {x.max()=} | {x.mean()=}")
         return x
 
 def modulate(x, shift, scale):
@@ -805,7 +795,6 @@ class MMDiT(nn.Module):
         self.pos_embed_offset = pos_embed_offset
         self.pos_embed_max_size = pos_embed_max_size
         self.x_block_self_attn_layers = x_block_self_attn_layers
-        print(f"{context_size=}")
 
         # hidden_size = default(hidden_size, 64 * depth)
         # num_heads = default(num_heads, hidden_size // 64)
@@ -914,11 +903,6 @@ class MMDiT(nn.Module):
         )
         spatial_pos_embed = spatial_pos_embed[:, top : top + h, left : left + w, :]
         spatial_pos_embed = rearrange(spatial_pos_embed, "1 h w c -> 1 (h w) c")
-        # print(spatial_pos_embed, top, left, h, w)
-        # # t = get_2d_sincos_pos_embed_torch(self.hidden_size, w, h, 7.875, 7.875, device=device) #matches exactly for 1024 res
-        # t = get_2d_sincos_pos_embed_torch(self.hidden_size, w, h, 7.5, 7.5, device=device) #scales better
-        # # print(t)
-        # return t
         return spatial_pos_embed
 
     def unpatchify(self, x, hw=None):
@@ -949,12 +933,6 @@ class MMDiT(nn.Module):
         control = None,
         transformer_options = {},
     ) -> torch.Tensor:
-        # print()
-        # print(">>> forward_core_with_concat FWD <<<")
-        # print(f"{x.shape=} | {x.min()=} | {x.max()=} | {x.mean()=}")
-        # print(f"{c_mod.shape=} | {c_mod.min()=} | {c_mod.max()=} | {c_mod.mean()=}")
-        # print(f"{context.shape=} | {context.min()=} | {context.max()=} | {context.mean()=}")
-        # print()
         patches_replace = transformer_options.get("patches_replace", {})
         if self.register_length > 0:
             context = torch.cat(
@@ -986,9 +964,6 @@ class MMDiT(nn.Module):
                     c=c_mod,
                     use_checkpoint=self.use_checkpoint,
                 )
-                # if context is not None:
-                #     print(f"{i=} | {context.shape=} | {context.min()=} | {context.max()=} | {context.mean()=}")
-                # print(f"{i=} | {x.shape=} | {x.min()=} | {x.max()=} | {x.mean()=}")
 
             if control is not None:
                 control_o = control.get("output")
@@ -996,9 +971,6 @@ class MMDiT(nn.Module):
                     add = control_o[i]
                     if add is not None:
                         x += add
-                        # print(f"{i=} | {add.shape=} | {add.min()=} | {add.max()=} | {add.mean()=}")
-                        # print(f"{i=} | {x.shape=} | {x.min()=} | {x.max()=} | {x.mean()=}")
-            # print()
 
         x = self.final_layer(x, c_mod)  # (N, T, patch_size ** 2 * out_channels)
         return x
@@ -1018,17 +990,6 @@ class MMDiT(nn.Module):
         t: (N,) tensor of diffusion timesteps
         y: (N,) tensor of class labels
         """
-        # print("MMDiT FWD")
-
-        # print(f"{x.min()=} | {x.max()=} | {x.mean()=}")
-        # print(f"{y.min()=} | {y.max()=} | {y.mean()=}")
-        # print(f"{context.min()=} | {context.max()=} | {context.mean()=}")
-        # print(f"{t=}")
-
-        # x = torch.ones_like(x)
-        # y = torch.ones_like(y)
-        # context = torch.ones_like(context)
-
         if self.context_processor is not None:
             context = self.context_processor(context)
 
@@ -1043,14 +1004,9 @@ class MMDiT(nn.Module):
         if context is not None:
             context = self.context_embedder(context)
 
-        # print(f"{x.shape=} | {x.min()=} | {x.max()=} | {x.mean()=}")
-        # print(f"{c.shape=} | {c.min()=} | {c.max()=} | {c.mean()=}")
-        # print(f"{context.shape=} | {context.min()=} | {context.max()=} | {context.mean()=}")
-
         x = self.forward_core_with_concat(x, c, context, control, transformer_options)
 
         x = self.unpatchify(x, hw=hw)  # (N, out_channels, H, W)
-        # print(f"{x.shape=} | {x.min()=} | {x.max()=} | {x.mean()=}")
         return x[:,:,:hw[-2],:hw[-1]]
 
 
