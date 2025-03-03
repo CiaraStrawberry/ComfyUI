@@ -466,7 +466,6 @@ def load_controlnet_mmdit(sd, model_options={}):
 
 class ControlNetSD35(ControlNet):
     def pre_run(self, model, percent_to_timestep_function):
-        new_ver = True
         if not self.control_model.new_version_ver:
             if self.control_model.double_y_emb:
                 missing, unexpected = self.control_model.orig_y_embedder.load_state_dict(model.diffusion_model.y_embedder.state_dict(), strict=False)
