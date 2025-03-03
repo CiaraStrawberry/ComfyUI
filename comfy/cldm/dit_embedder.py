@@ -93,12 +93,19 @@ class ControlNetEmbedder(nn.Module):
         context: Optional[torch.Tensor] = None,
         hint = None,
     ) -> Tuple[Tensor, List[Tensor]]:
+        new_mode = False
         x_shape = list(x.shape)
         x = self.x_embedder(x)
         if not self.double_y_emb:
+            
             h = (x_shape[-2] + 1) // self.patch_size
             w = (x_shape[-1] + 1) // self.patch_size
-            x += get_2d_sincos_pos_embed_torch(self.hidden_size, w, h, device=x.device)
+            if new_mode:
+                x += get_2d_sincos_pos_embed_torch(self.hidden_size, w, h, device=x.device)
+            else:
+                print("running old mode")
+                p_embed = get_2d_sincos_pos_embed_torch(self.hidden_size, w, h, device=x.device)
+                x += p_embed
         c = self.t_embedder(timesteps, dtype=x.dtype)
         if y is not None and self.y_embedder is not None:
             if self.double_y_emb:
@@ -108,10 +115,16 @@ class ControlNetEmbedder(nn.Module):
 
         h = (x_shape[-2] + 1) // self.patch_size
         w = (x_shape[-1] + 1) // self.patch_size
-        hint_emb = self.pos_embed_input(hint)
-        hint_emb += get_2d_sincos_pos_embed_torch(self.hidden_size, w, h, device=x.device)
-        x = x + hint_emb
-
+        
+        if new_mode:
+            hint_emb = self.pos_embed_input(hint)
+            hint_emb += get_2d_sincos_pos_embed_torch(self.hidden_size, w, h, device=x.device)
+            x = x + hint_emb
+        else:
+            print("running old mode 2")
+            x = x + self.pos_embed_input(hint)
+            p_embed = get_2d_sincos_pos_embed_torch(self.hidden_size, w, h, device=x.device)
+            x += p_embed
         block_out = ()
 
         repeat = math.ceil(self.main_model_double / len(self.transformer_blocks))
