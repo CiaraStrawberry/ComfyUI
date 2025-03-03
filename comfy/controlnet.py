@@ -467,7 +467,7 @@ def load_controlnet_mmdit(sd, model_options={}):
 class ControlNetSD35(ControlNet):
     def pre_run(self, model, percent_to_timestep_function):
         new_ver = True
-        if not self.control_model.videodit_ver:
+        if not self.control_model.new_version_ver:
             if self.control_model.double_y_emb:
                 missing, unexpected = self.control_model.orig_y_embedder.load_state_dict(model.diffusion_model.y_embedder.state_dict(), strict=False)
             else:
@@ -498,12 +498,12 @@ def load_controlnet_sd35(sd, model_options={}):
         new_sd[k] = sd[k]
     sd = new_sd
     
-    #check for the keys only present in the videodit trained models
+    #check for the keys only present in the new_version trained models
     has_context_embedder = (
         "context_embedder.weight" in sd and
         "context_embedder.bias" in sd
     )
-    videodit_ver = not has_context_embedder
+    new_version_ver = not has_context_embedder
     
     y_emb_shape = sd["y_embedder.mlp.0.weight"].shape
     depth = y_emb_shape[0] // 64
@@ -534,7 +534,7 @@ def load_controlnet_sd35(sd, model_options={}):
                                                                device=offload_device,
                                                                dtype=unet_dtype,
                                                                operations=operations,
-                                                               videodit_ver=videodit_ver)
+                                                               new_version_ver=new_version_ver)
 
     control_model = controlnet_load_state_dict(control_model, sd)
 
