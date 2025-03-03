@@ -25,6 +25,8 @@ class ControlNetEmbedder(nn.Module):
         dtype: torch.dtype,
         pos_embed_max_size: Optional[int] = None,
         operations = None,
+        videodit_ver=True,
+        
     ):
         super().__init__()
         self.main_model_double = main_model_double
@@ -41,6 +43,7 @@ class ControlNetEmbedder(nn.Module):
             dtype=dtype,
             operations=operations,
         )
+        self.videodit_ver=videodit_ver
 
         self.t_embedder = TimestepEmbedder(self.hidden_size, dtype=dtype, device=device, operations=operations)
 
@@ -93,7 +96,6 @@ class ControlNetEmbedder(nn.Module):
         context: Optional[torch.Tensor] = None,
         hint = None,
     ) -> Tuple[Tensor, List[Tensor]]:
-        new_mode = True
         x_shape = list(x.shape)
         x = self.x_embedder(x)
         if not self.double_y_emb:
@@ -107,7 +109,7 @@ class ControlNetEmbedder(nn.Module):
             y = self.y_embedder(y)
             c = c + y
          
-        if new_mode:
+        if self.videodit_ver:
             h = (x_shape[-2] + 1) // self.patch_size
             w = (x_shape[-1] + 1) // self.patch_size
             hint_emb = self.pos_embed_input(hint)
