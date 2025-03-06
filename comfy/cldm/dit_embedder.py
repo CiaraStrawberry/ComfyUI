@@ -25,7 +25,7 @@ class ControlNetEmbedder(nn.Module):
         dtype: torch.dtype,
         pos_embed_max_size: Optional[int] = None,
         operations = None,
-        new_version=True,
+        new_version_ver=True,
         
     ):
         super().__init__()
@@ -43,7 +43,7 @@ class ControlNetEmbedder(nn.Module):
             dtype=dtype,
             operations=operations,
         )
-        self.new_version=new_version
+        self.new_version_ver=new_version_ver
 
         self.t_embedder = TimestepEmbedder(self.hidden_size, dtype=dtype, device=device, operations=operations)
 
@@ -109,7 +109,7 @@ class ControlNetEmbedder(nn.Module):
             y = self.y_embedder(y)
             c = c + y
          
-        if self.videodit_ver:
+        if self.new_version_ver:
             h = (x_shape[-2] + 1) // self.patch_size
             w = (x_shape[-1] + 1) // self.patch_size
             hint_emb = self.pos_embed_input(hint)
